@@ -10,7 +10,7 @@ int main() {
 	auto wavefrontMatrix = MatrixLoader::loadCSV("../matlab/baseline_matrix.csv", 20);
 
 	//Accesses and renders the SFML window
-	sf::REnderWindow window(sf::VideoMode(800, 600), "Advance Adaptive Optics Telemetry & Control Engine");
+	sf::RenderWindow window(sf::VideoMode(800, 600), "Advance Adaptive Optics Telemetry & Control Engine");
 	window.setFramerateLimit(60);
 
 	while (window.isOpen()) {
