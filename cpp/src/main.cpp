@@ -26,7 +26,8 @@ int main() {
 	//Load the baseline wavefront matrix from MATLAB and declared gridSize variable and defines it
 	//(Looks back from the build folder to access MATLAB)
 	int gridSize = 20;
-	auto wavefrontMatrix = MatrixLoader::loadCSV("../matlab/baseline_matrix.csv", 20);
+	std::string csvPath = "../matlab/baseline_matrix.csv";
+	auto wavefrontMatrix = MatrixLoader::loadCSV(csvPath, gridSize);
 
 	//Finds min and max values in the matrix for coloring and color normalization
 	double minVal = 1e9, maxVal = -1e9;
@@ -37,8 +38,10 @@ int main() {
 	}
 }
 
+	double visualGain = 1.0;
+
 	//Accesses and renders the SFML window
-	sf::RenderWindow window(sf::VideoMode(800, 600), "Advance Adaptive Optics Telemetry & Control Engine");
+	sf::RenderWindow window(sf::VideoMode(900, 700), "Advance Adaptive Optics Telemetry & Control Engine");
 	window.setFramerateLimit(60);
 
 	//UI Grid sizing controls
@@ -52,7 +55,24 @@ int main() {
 			if (event.type==sf::Event::Closed)
 				window.close();
 
+		//Handles keyboard inputs for user controls
+		if (event.type == sf::Event::KeyPressed) {
+			if (event.key.code == sf::Keyboard::R) {
+				std::cout << "Reloading wavefront matrix from disk..." << std::endl;
+				wavefrontMatrix = MatrixLoader::loadCSV(csvPath, gridSize);
+			}
+
+			else if (event.key.code == sf::Keyboard::Up) {
+				visualGain += 0.1;
+				std::cout << "Increased visual gain multiplier to: " << visualGain << std::endl;
+			}
+
+			else if (event.key.code == sf::Keyboard::Down) {
+				visualGain = std::max(0.1, visualGain - 0.1);
+				std::cout << "Decreased visual gain multiplier to: " << visualGain << std::endl;
 		}
+	}
+}
 
 		window.clear(sf::Color(15, 15, 25)); //Dark theme
 
@@ -61,6 +81,7 @@ int main() {
 		for (int j = 0; j < gridSize; ++j) {
 			sf::RectangleShape cell(sf::Vector2f(cellSize - 2.0f, cellSize - 2.0f));
 			cell.setPosition(originX + j * cellSize, originY + i * cellSize);
+
 
 	//Colors cells based on refraction value of the matrix
 	cell.setFillColor(valueToColor(wavefrontMatrix[i][j], minVal, maxVal));
