@@ -1,32 +1,22 @@
 # Advanced Adaptive Optical Matrix & Closed-Loop Control Engine
 
-A real-time, multi-disciplinary adaptive optics simulation platform built to model and correct optical wavefront aberrations in high-precision biomedical environments.
+A high-performance C++17 simulation engine utilizing SFML for real-time telemetry and visual feedback control, paired with MATLAB-generated wavefront aberration matrices. Designed to model phase correction loops analogous to Liquid Crystal Spatial Light Modulators (LC-SLMs).
 
----
+## 🚀 Key Features
+- **Matrix Ingestion Pipeline:** Custom C++ CSV parser loading spatial wavefront phase grids.
+- **Real-Time Heatmap Visualization:** Dynamic thermal color-mapping (Blue-Green-Red thermal gradient) rendering 20x20 phase matrices at 60 FPS using SFML.
+- **Interactive Telemetry HUD:** On-screen data overlays displaying live gain multipliers and state variables.
+- **Closed-Loop Feedback Controller:** Iterative damping algorithm simulating deformable mirror convergence toward a flat wavefront.
 
-## 🔬 System Overview
-This platform bridges high-level optical mathematical theory with low-latency C++ execution and interactive UI visual telemetry:
+## 🛠️ Tech Stack
+- **Language:** C++17
+- **Modeling & Export:** MATLAB / Octave
+- **Graphics & UI:** SFML (Simple and Fast Multimedia Library)
+- **Build System:** GNU Make / Shell Scripting
 
-* **MATLAB / Octave (`/matlab`):** Generates baseline biometric refraction matrices and models spatial aberrations using Zernike-inspired wave propagation math.
-* **C++ Core (`/cpp`):** Handles high-frequency real-time matrix transformations and state estimation via Kalman filtering.
-* **SFML UI Layer (`/cpp`):** Provides a high-detail visual GUI with live telemetry curves and interactive control sliders.
+## ⚙️ Getting Started & Compilation
+Ensure you have SFML installed on your system, then compile and run the engine:
 
----
-
-## 🛠 Tech Stack & Architecture
-* **Theoretical Math Engine:** MATLAB / GNU Octave
-* **Core Processing:** C++17
-* **Graphics & Telemetry GUI:** SFML 2.x / 3.x
-* **Version Control & DevOps:** Git, GitHub Architecture
-
----
-
-## 🚀 Repository Structure
-```text
-AdvancedAdaptiveOptics/
-├── matlab/ # Theoretical wavefront generation & matrix export
-├── cpp/
-│ ├── include/ # Core engine headers & Kalman filter declarations
-│ ├── src/ # Implementation source files & GUI loop
-│ └── assets/ # UI fonts & render assets
-└── docs/ # System documentation & architectural schematics
+```bash
+cd cpp
+./build_engine
