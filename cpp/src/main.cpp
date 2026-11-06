@@ -30,19 +30,26 @@ int main() {
 	auto wavefrontMatrix = MatrixLoader::loadCSV(csvPath, gridSize);
 
 	//Finds min and max values in the matrix for coloring and color normalization
-	double minVal = 1e9, maxVal = -1e9;
-	for (const auto& row: wavefrontMatrix) {
-		for (double val : row) {
-			if (val < minVal) minVal = val;
-			if (val > maxVal) maxVal = val;
-	}
-}
-
+	double minVal = -2.0, maxVal = 2.0;
 	double visualGain = 1.0;
 
 	//Accesses and renders the SFML window
-	sf::RenderWindow window(sf::VideoMode(900, 700), "Advance Adaptive Optics Telemetry & Control Engine");
+	sf::RenderWindow window(sf::VideoMode(950, 750), "Advance Adaptive Optics Telemetry & Control Engine");
 	window.setFramerateLimit(60);
+
+	sf::Font font;
+	bool fontLoaded = font.loadFromFile("../assets/font.ttf");
+	if (!fontLoaded) {
+		std::cout << "Warning: Could not load font from ../assests/font.ttf. HUD text rendering disabled." << std::endl;
+}
+
+	sf::Text telemetryText;
+	if (fontLoaded) {
+		telemetryText.setFont(font);
+		telemetryText.setCharacterSize(16);
+		telemetryText.setFillColor(sf::Color::White);
+		telemetryText.setPosition(50.0f, 30.0f);
+}
 
 	//UI Grid sizing controls
 	float cellSize = 22.0f;
@@ -68,9 +75,8 @@ int main() {
 					for (int j = 0; j < gridSize; ++j) {
 						wavefrontMatrix[i][j] *= 0.80; 
 			}
-		}
 	}
-
+}
 			else if (event.key.code == sf::Keyboard::Up) {
 				visualGain += 0.1;
 				std::cout << "Increased visual gain multiplier to: " << visualGain << std::endl;
@@ -85,6 +91,18 @@ int main() {
 }
 
 		window.clear(sf::Color(15, 15, 25)); //Dark theme
+
+		if (fontLoaded) {
+			std::string hudString = "=== ADAPTIVE OPTICS TELEMETRY ENGINE ===\n"
+			"Status: ONLINE | Grid Size: 20x20\n"
+			"Visual Gain Multiplier: " + std::to_string(visualGain) + "\n\n"
+			"CONTROLS:\n"
+			" [C] - Execute Closed-Loop Correction Step\n"
+			" [R] - Reload Baseline Matrix from Disk\n"
+			" [UP / DOWN] - Adjust Visual Gain Scale";
+			telemetryText.setString(hudString);
+			window.draw(telemetryText);
+}
 
 	//REnders wavefront heatmap grid
 	for (int i = 0; i < gridSize; ++i) {
