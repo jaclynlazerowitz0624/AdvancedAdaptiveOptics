@@ -62,6 +62,15 @@ int main() {
 				wavefrontMatrix = MatrixLoader::loadCSV(csvPath, gridSize);
 			}
 
+			else if (event.key.code == sf::Keyboard::C) {
+				std::cout << "Executing closed-loop correction step..." << std::endl;
+				for (int i = 0; i < gridSize; ++i) {
+					for (int j = 0; j < gridSize; ++j) {
+						wavefrontMatrix[i][j] *= 0.80; 
+			}
+		}
+	}
+
 			else if (event.key.code == sf::Keyboard::Up) {
 				visualGain += 0.1;
 				std::cout << "Increased visual gain multiplier to: " << visualGain << std::endl;
@@ -70,6 +79,7 @@ int main() {
 			else if (event.key.code == sf::Keyboard::Down) {
 				visualGain = std::max(0.1, visualGain - 0.1);
 				std::cout << "Decreased visual gain multiplier to: " << visualGain << std::endl;
+
 		}
 	}
 }
