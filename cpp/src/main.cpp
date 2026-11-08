@@ -85,24 +85,44 @@ int main() {
 			else if (event.key.code == sf::Keyboard::Down) {
 				visualGain = std::max(0.1, visualGain - 0.1);
 				std::cout << "Decreased visual gain multiplier to: " << visualGain << std::endl;
+			}
+
+			else if (event.key.code == sf::Keyboard::Left) {
+				csvPath = "../matlab/baseline_matrix.csv";
+				wavefrontMatrix = MatrixLoader::loadCSV(csvPath, gridSize);
+				std::cout << "Switched to baseline wavefront profile." << std::endl;
+
+			}
+
+			else if (event.key.code == sf::Keyboard::Right) {
+				csvPath = "../matlab/astigmatism_matrix.csv";
+				wavefrontMatrix = MatrixLoader::loadCSV(csvPath, gridSize);
+				std::cout << "Switched to astigmatism wavefront profile." << std::endl;
+}
 
 		}
-	}
 }
 
-		window.clear(sf::Color(15, 15, 25)); //Dark theme
+		window.clear(sf::Color(15, 15, 25));
 
-		if (fontLoaded) {
-			std::string hudString = "=== ADAPTIVE OPTICS TELEMETRY ENGINE ===\n"
-			"Status: ONLINE | Grid Size: 20x20\n"
-			"Visual Gain Multiplier: " + std::to_string(visualGain) + "\n\n"
-			"CONTROLS:\n"
-			" [C] - Execute Closed-Loop Correction Step\n"
-			" [R] - Reload Baseline Matrix from Disk\n"
-			" [UP / DOWN] - Adjust Visual Gain Scale";
-			telemetryText.setString(hudString);
-			window.draw(telemetryText);
+		double cellSize = 800.0/gridSize;
+
+		double minVal = wavefrontMatrix[0][0];
+		double maxVal = wavefrontMatrix[0][0];
+		for (const auto& row : wavefrontMatrix) {
+			for(double v : row) {
+				double scaled_val = v * visualGain;
+				if (scaled_val < minVal) minVal = scaled_val;
+				if (scaled_val > maxVal) maxVal = scaled_val;
 }
+}
+if (maxVal - minVal < 0.0001){
+	 minVal -=0.5;
+	maxVal +=0.5;
+}
+		double centerX = gridSize/2.0;
+		double centerY = gridSize/2.0;
+		double radius = gridSize/2.0;
 
 	//REnders wavefront heatmap grid
 	for (int i = 0; i < gridSize; ++i) {
@@ -110,9 +130,14 @@ int main() {
 			sf::RectangleShape cell(sf::Vector2f(cellSize - 2.0f, cellSize - 2.0f));
 			cell.setPosition(originX + j * cellSize, originY + i * cellSize);
 
-
-	//Colors cells based on refraction value of the matrix
-	cell.setFillColor(valueToColor(wavefrontMatrix[i][j], minVal, maxVal));
+		double dx = j - centerX + 0.5;
+		double dy = i - centerY + 0.5;
+		if ((dx * dx + dy * dy) <= (radius*radius)) {
+			double val = wavefrontMatrix[i][j] * visualGain;
+			cell.setFillColor(valueToColor(val, minVal, maxVal));
+	} else {
+		cell.setFillColor(sf::Color(10, 10, 15));
+}
 	window.draw(cell);
 
 	}
