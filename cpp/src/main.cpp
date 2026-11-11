@@ -16,12 +16,16 @@ sf::Color valueToColor(double val, double minVal, double maxVal) {
 	sf::Uint8 b = static_cast<sf::Uint8>(255 * (1.0 - normalized));
 
 	return sf::Color(r, g, b);
-
 }
 
 
 int main() {
 	std::cout << "Initializing Advanced Adaptive Optics Engine..." << std::endl;
+
+	//Kalman filter Estimation Parameters
+        double processNoise = 0.01; //= the unsteadiness in liquid crystals
+        double measurementNoise = 0.08; //= sensor noise from phase detection
+        double errorCovariance = 1.0; //= initial estimated uncertainty
 
 	//Load the baseline wavefront matrix from MATLAB and declared gridSize variable and defines it
 	//(Looks back from the build folder to access MATLAB)
@@ -70,12 +74,23 @@ int main() {
 			}
 
 			else if (event.key.code == sf::Keyboard::C) {
-				std::cout << "Executing closed-loop correction step..." << std::endl;
+				std::cout << "Executing Kalman state estimation closed-loop step...\n";
+
+				double predictedCovariance = errorCovariance + processNoise;
+				double kalmanGain = predictedCovariance / (predictedCovariance+measurementNoise);
+
 				for (int i = 0; i < gridSize; ++i) {
 					for (int j = 0; j < gridSize; ++j) {
-						wavefrontMatrix[i][j] *= 0.80; 
+						double measurement = wavefrontMatrix[i][j];
+						double residual = 0.0-measurement;
+
+						wavefrontMatrix[i][j] += kalmanGain* residual;
 			}
 	}
+
+	errorCovariance = (1.0 - kalmanGain)*predictedCovariance;
+	std::cout << "Updated Kalman Gain: " << kalmanGain
+		<< " | Error Covariance: " << errorCovariance << "\n";
 }
 			else if (event.key.code == sf::Keyboard::Up) {
 				visualGain += 0.1;
@@ -111,9 +126,8 @@ int main() {
 		double maxVal = wavefrontMatrix[0][0];
 		for (const auto& row : wavefrontMatrix) {
 			for(double v : row) {
-				double scaled_val = v * visualGain;
-				if (scaled_val < minVal) minVal = scaled_val;
-				if (scaled_val > maxVal) maxVal = scaled_val;
+				if (v < minVal) minVal = v;
+				if (v > maxVal) maxVal = v;
 }
 }
 if (maxVal - minVal < 0.0001){
