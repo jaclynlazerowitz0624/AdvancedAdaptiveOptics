@@ -1,10 +1,11 @@
 #include <SFML/Graphics.hpp>
-#include "../include/MatrixLoader.hpp"
 #include <iostream>
-#include <algorithm>
+#include <vector>
+#include "../include/MatrixLoader.hpp"
+#include "ColorMapper.hpp"
 
 
-//Function tha maps scalar values to a color gradient (Blue -> Green -> Red)
+//Function the maps scalar values to a color gradient (Blue -> Green -> Red)
 sf::Color valueToColor(double val, double minVal, double maxVal) {
 	//Normalize value between 0.0 and 1.0 (makes the program easier to compile and run since a simple number is used)
 	double normalized = (maxVal - minVal == 0) ? 0.0 : (val - minVal) / (maxVal - minVal);
@@ -22,43 +23,25 @@ sf::Color valueToColor(double val, double minVal, double maxVal) {
 int main() {
 	std::cout << "Initializing Advanced Adaptive Optics Engine..." << std::endl;
 
-	//Kalman filter Estimation Parameters
-        double processNoise = 0.01; //= the unsteadiness in liquid crystals
-        double measurementNoise = 0.08; //= sensor noise from phase detection
-        double errorCovariance = 1.0; //= initial estimated uncertainty
+	const int gridSize = 32;
+	sf::RenderWindow window (sf::VideoMode(800, 800), "Adaptive Optical Matrix Engine");
+	window.setFramerLimit(60);
 
-	//Load the baseline wavefront matrix from MATLAB and declared gridSize variable and defines it
-	//(Looks back from the build folder to access MATLAB)
-	int gridSize = 20;
 	std::string csvPath = "../matlab/baseline_matrix.csv";
-	auto wavefrontMatrix = MatrixLoader::loadCSV(csvPath, gridSize);
+	std::vector<std::vector<double>> wavefrontMatrix = MatrixLoader::loadCSV(csvPath, gridSize);
 
-	//Finds min and max values in the matrix for coloring and color normalization
-	double minVal = -2.0, maxVal = 2.0;
-	double visualGain = 1.0;
+	double visualGain = 1.0f;
+	float originx = 100.0f;
+	float originy = 100.0f;
 
-	//Accesses and renders the SFML window
-	sf::RenderWindow window(sf::VideoMode(950, 750), "Advance Adaptive Optics Telemetry & Control Engine");
-	window.setFramerateLimit(60);
+	//Slider UI state variables
+	bool isDraggingSlider = false;
+	float sliderX = 100.0f;
+	float sliderY = 30.0f;
+	float sliderWidth = 250.0f;
+	float sliderHeight = 10.0f;
+	float handleRadius = 8.0f;
 
-	sf::Font font;
-	bool fontLoaded = font.loadFromFile("../assets/font.ttf");
-	if (!fontLoaded) {
-		std::cout << "Warning: Could not load font from ../assests/font.ttf. HUD text rendering disabled." << std::endl;
-}
-
-	sf::Text telemetryText;
-	if (fontLoaded) {
-		telemetryText.setFont(font);
-		telemetryText.setCharacterSize(16);
-		telemetryText.setFillColor(sf::Color::White);
-		telemetryText.setPosition(50.0f, 30.0f);
-}
-
-	//UI Grid sizing controls
-	float cellSize = 22.0f;
-	float originX = 100.0f;
-	float originY = 100.0f;
 
 	while (window.isOpen()) {
 		sf::Event event;
@@ -66,40 +49,46 @@ int main() {
 			if (event.type==sf::Event::Closed)
 				window.close();
 
+				if (event.type == sf::Event::MouseButtonPressed) {
+					if (event.mouseButton.button == sf::Mouse::Left) {
+						sf::Vector2f mousePos(event.mouseButton.x, event.mouseButton.y ? static_cast<float>(event.mouseButton.x) : 0, static_cast<float>(event.mouseButton.y));
+			if (mousePos.x >= sliderX - 10.0f && mousePos.x < = sliderX + sliderWidth + 10.0f && mousePos.y >= sliderY - 15.0f && mousePos.y <= sliderY + sliderHeight + 15.0f) {
+				isDraggingSlider = true;
+
+				float mouseX = mousePos.x;
+				if (mouseX < sliderX) mouseX = sliderX;
+				if (mouseX > sliderX + sliderWidth) mouseX = sliderX + sliderWidth;
+				float normalized = (mouseX - sliderX)/sliderWidth;
+				visualGain = 0.1f + normalized * (5.0f-0.1f);
+		}
+	}
+}
+else if (event.type == sf::Event::MouseButtonReleased) {
+	if (event.mouseButton.button == sf::Mouse::Left) {
+		isDraggingSlider = false;
+	}
+}
+
 		//Handles keyboard inputs for user controls
 		if (event.type == sf::Event::KeyPressed) {
-			if (event.key.code == sf::Keyboard::R) {
-				std::cout << "Reloading wavefront matrix from disk..." << std::endl;
-				wavefrontMatrix = MatrixLoader::loadCSV(csvPath, gridSize);
+			if (event.key.code == sf::Keyboard::Escape) {
+				window.close();
 			}
 
 			else if (event.key.code == sf::Keyboard::C) {
-				std::cout << "Executing Kalman state estimation closed-loop step...\n";
-
-				double predictedCovariance = errorCovariance + processNoise;
-				double kalmanGain = predictedCovariance / (predictedCovariance+measurementNoise);
-
-				for (int i = 0; i < gridSize; ++i) {
-					for (int j = 0; j < gridSize; ++j) {
-						double measurement = wavefrontMatrix[i][j];
-						double residual = 0.0-measurement;
-
-						wavefrontMatrix[i][j] += kalmanGain* residual;
+				for (auto& row : wavefrontMatrix) {
+					for (double& val : row) {
+						val *= 0.85;
+				}
 			}
-	}
-
-	errorCovariance = (1.0 - kalmanGain)*predictedCovariance;
-	std::cout << "Updated Kalman Gain: " << kalmanGain
-		<< " | Error Covariance: " << errorCovariance << "\n";
-}
+				std::cout << "Executing Kalman state estimation closed-loop step...\n";
+			}
 			else if (event.key.code == sf::Keyboard::Up) {
-				visualGain += 0.1;
-				std::cout << "Increased visual gain multiplier to: " << visualGain << std::endl;
+				visualGain += 0.2;
 			}
 
 			else if (event.key.code == sf::Keyboard::Down) {
-				visualGain = std::max(0.1, visualGain - 0.1);
-				std::cout << "Decreased visual gain multiplier to: " << visualGain << std::endl;
+				visualGain = std::max(0.1, visualGain - 0.2f);
 			}
 
 			else if (event.key.code == sf::Keyboard::Left) {
@@ -113,14 +102,30 @@ int main() {
 				csvPath = "../matlab/astigmatism_matrix.csv";
 				wavefrontMatrix = MatrixLoader::loadCSV(csvPath, gridSize);
 				std::cout << "Switched to astigmatism wavefront profile." << std::endl;
-}
+				}
 
 		}
 }
 
+if (isDraggingSlider) {
+	if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+		sf::Vector2i localMouse = sf::Mouse::getPosition(window);
+		float mouseX = static_cast<float>(localMouse.x);
+
+		if (mouseX < sliderX) mouseX = sliderX;
+		if (mouseX > sliderX + sliderWidth) mouseX = sliderX + sliderWidth;
+
+		float normalized = (mouseX - sliderX) / sliderWidth;
+		visualGain = 0.1f + normalized * (5.0f - 0.1f);
+
+	} else {
+		isDraggingSlider = false;
+	}
+}
+
 		window.clear(sf::Color(15, 15, 25));
 
-		double cellSize = 800.0/gridSize;
+		double cellSize = 600.0/gridSize;
 
 		double minVal = wavefrontMatrix[0][0];
 		double maxVal = wavefrontMatrix[0][0];
@@ -128,9 +133,9 @@ int main() {
 			for(double v : row) {
 				if (v < minVal) minVal = v;
 				if (v > maxVal) maxVal = v;
+	}
 }
-}
-if (maxVal - minVal < 0.0001){
+if ((maxVal - minVal) < 0.0001){
 	 minVal -=0.5;
 	maxVal +=0.5;
 }
@@ -150,31 +155,26 @@ if (maxVal - minVal < 0.0001){
 			double val = wavefrontMatrix[i][j] * visualGain;
 			cell.setFillColor(valueToColor(val, minVal, maxVal));
 	} else {
-		cell.setFillColor(sf::Color(10, 10, 15));
+		cell.setFillColor(sf::Color(35, 35, 55));
 }
 	window.draw(cell);
 
 	}
 }
 
-		//TODO: Render wavefront mapping and interactive UI sliders later in the program
-
-		float sliderX = 50.0f;
-		float sliderY = 50.0f;
-		float sliderWidth = 200.0f;
-		float sliderHeight = 8.0f;
 
 		//Map visual gain to handle position
 		float normalizedGain = (visualGain - 0.1f) / (5.0f - 0.1f);
 		if (normalizedGain<0.0f) normalizedGain =0.0f;
 		if (normalizedGain>1.0f) normalizedGain = 1.0f;
 		float handleX = sliderX + (normalizedGain * sliderWidth);
-		float handleRadius = 7.0f;
 
 		//Draw slider background
 		sf::RectangleShape sliderTrack (sf::Vector2f(sliderWidth, sliderHeight));
 		sliderTrack.setPosition(sliderX, sliderY);
-		sliderTrack.setFillColor(sf::Color(50, 50, 70));
+		sliderTrack.setFillColor(sf::Color(80, 80, 110));
+		sliderTrack.setOutlineColor(sf::Color(150, 150, 180));
+		sliderTrack.setOutlineThickness(1.0f);
 		window.draw(sliderTrack);
 
 		//Draw slider draggable handle
