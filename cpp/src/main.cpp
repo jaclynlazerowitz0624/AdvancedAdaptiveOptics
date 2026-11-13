@@ -158,7 +158,32 @@ if (maxVal - minVal < 0.0001){
 }
 
 		//TODO: Render wavefront mapping and interactive UI sliders later in the program
-		window.display();
+
+		float sliderX = 50.0f;
+		float sliderY = 50.0f;
+		float sliderWidth = 200.0f;
+		float sliderHeight = 8.0f;
+
+		//Map visual gain to handle position
+		float normalizedGain = (visualGain - 0.1f) / (5.0f - 0.1f);
+		if (normalizedGain<0.0f) normalizedGain =0.0f;
+		if (normalizedGain>1.0f) normalizedGain = 1.0f;
+		float handleX = sliderX + (normalizedGain * sliderWidth);
+		float handleRadius = 7.0f;
+
+		//Draw slider background
+		sf::RectangleShape sliderTrack (sf::Vector2f(sliderWidth, sliderHeight));
+		sliderTrack.setPosition(sliderX, sliderY);
+		sliderTrack.setFillColor(sf::Color(50, 50, 70));
+		window.draw(sliderTrack);
+
+		//Draw slider draggable handle
+		sf::CircleShape sliderHandle(handleRadius);
+		sliderHandle.setPosition(handleX - handleRadius, sliderY + (sliderHeight/2.0f) - handleRadius);
+		sliderHandle.setFillColor(sf::Color(0, 220, 180));
+		window.draw(sliderHandle);
+
+	window.display();
 	}
 	return 0;
 }
