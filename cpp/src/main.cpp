@@ -27,6 +27,13 @@ int main() {
 	sf::RenderWindow window (sf::VideoMode(800, 800), "Adaptive Optical Matrix Engine");
 	window.setFramerLimit(60);
 
+	sf::Font font;
+	bool fontLoaded =  true;
+	if (!font.loadFromFile("../assets/font.ttf") {
+		std::cout << "Warning: Could not load font from ../assets/font.ttf. HUD text disbaled.\n";
+		fontLoaded  = false;
+		}
+
 	std::string csvPath = "../matlab/baseline_matrix.csv";
 	std::vector<std::vector<double>> wavefrontMatrix = MatrixLoader::loadCSV(csvPath, gridSize);
 
