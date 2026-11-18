@@ -110,6 +110,8 @@ int main() {
 				std::cout << "Reset visual gain to default (1.0).\n";
 
 			}
+		}
+	}
 
 
 if (isDraggingSlider) {
@@ -155,6 +157,8 @@ if (isDraggingSlider) {
 }
 	window.draw(cell);
 
+		}
+	}
 
 		//Map visual gain to handle position
 		float normalizedGain = (visualGain - 0.1f) / (5.0f - 0.1f);
