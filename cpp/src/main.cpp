@@ -124,7 +124,6 @@ if (isDraggingSlider) {
 		visualGain = 0.1f + normalizedGain * (5.0 - 0.1f);
 	}
 }
-}
 	window.clear(sf::Color(15, 15, 25));
 
 		double cellSize = 600.0/gridSize;
