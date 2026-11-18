@@ -184,7 +184,6 @@ if (isDraggingSlider) {
 		}
 
 	window.display();
-		}
 	}
 	return 0;
 }
